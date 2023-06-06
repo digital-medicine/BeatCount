@@ -3,6 +3,5 @@
 .idea/*
 .ipynb_checkpoints
 signal_changes.txt
-*.ipynb
 test.py
 src/static/uploads/
