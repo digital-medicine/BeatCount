@@ -5,80 +5,74 @@
     <style>
         #video-container {
             position: relative;
+            width: 640px;
+            height: 480px;
         }
 
-        #roi-overlay {
+        #video {
+            width: 100%;
+            height: 100%;
+        }
+
+        #overlay {
             position: absolute;
-            border: 2px solid red;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             pointer-events: none;
         }
-    </style>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script>
-        var roiCoordinates = [];
 
-        function drawRoi(x, y, width, height) {
-            var overlay = $('#roi-overlay');
-            overlay.css({
-                left: x + 'px',
-                top: y + 'px',
-                width: width + 'px',
-                height: height + 'px'
-            });
+        #overlay canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
         }
-
-        $(document).ready(function() {
-            var video = $('#video');
-            var videoContainer = $('#video-container');
-            var roiOverlay = $('<div id="roi-overlay"></div>');
-            videoContainer.append(roiOverlay);
-
-            video.on('loadedmetadata', function() {
-                video[0].pause();
-                video[0].currentTime = 0;
-                drawRoi(0, 0, video[0].videoWidth, video[0].videoHeight);
-            });
-
-            video.on('click', function(event) {
-                var offset = video.offset();
-                var x = event.pageX - offset.left;
-                var y = event.pageY - offset.top;
-                roiCoordinates.push([x, y]);
-                if (roiCoordinates.length === 2) {
-                    var roi = roiCoordinates[0];
-                    var width = roiCoordinates[1][0] - roi[0];
-                    var height = roiCoordinates[1][1] - roi[1];
-                    drawRoi(roi[0], roi[1], width, height);
-                    roiCoordinates = [];
-                }
-            });
-
-            video.on('mousemove', function(event) {
-                if (roiCoordinates.length === 1) {
-                    var roi = roiCoordinates[0];
-                    var x = roi[0];
-                    var y = roi[1];
-                    var width = event.pageX - video.offset().left - x;
-                    var height = event.pageY - video.offset().top - y;
-                    drawRoi(x, y, width, height);
-                }
-            });
-        });
-    </script>
+    </style>
 </head>
 <body>
     <h1>Select ROIs</h1>
     <div id="video-container">
-        <video id="video" width="640" height="480" controls autoplay>
-            <source src="{{ video_path }}" type="video/mp4">
-        </video>
+        <video id="video" width="640" height="480" autoplay loop></video>
+        <div id="overlay">
+            <canvas id="roi-canvas"></canvas>
+        </div>
     </div>
-    <form method="POST" action="/process">
-        {% for roi in roi_coords %}
-        <input type="hidden" name="roi_coords[]" value="{{ roi[0] }},{{ roi[1] }},{{ roi[2] }},{{ roi[3] }}">
-        {% endfor %}
-        <input type="hidden" name="video_path" value="{{ video_path }}">
+    <form id="roi-form" method="POST" action="/process">
+        <input type="hidden" id="filename" name="filename" value="{{ filename }}">
+        <input type="hidden" id="roi-coords" name="roi_coords[]" value="">
         <input type="submit" value="Process ROIs">
     </form>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            var video = document.getElementById('video');
+            var canvas = document.getElementById('roi-canvas');
+            var overlay = document.getElementById('overlay');
+            var doneBtn = document.getElementById('done-btn');
+            var roiForm = document.getElementById('roi-form');
+            var roiCoords = [];
+
+            // Disable the form submission initially
+            roiForm.addEventListener('submit', function(event) {
+                if (roiCoords.length === 0) {
+                    event.preventDefault();
+                    alert('Please select at least one ROI');
+                } else {
+                    document.getElementById('roi-coords').value = JSON.stringify(roiCoords);
+                }
+            });
+
+            // Add event listener for the "Done" button
+            doneBtn.addEventListener('click', function() {
+                roiForm.submit();
+            });
+
+            // Start playing the video
+            video.src = "{{ url_for('static', filename='uploads/' ~ filename) }}";
+            video.load();
+        });
+    </script>
 </body>
 </html>
