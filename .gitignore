@@ -5,3 +5,5 @@
 signal_changes.txt
 test.py
 src/static/uploads/
+*.pyc
+test.html

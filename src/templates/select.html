@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Video Signal Tracking</title>
+    <script src="https://docs.opencv.org/master/opencv.js" onload="onOpenCvReady();" async></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <b>Region of interest Tracker</b>
+    <p></p>
+    <input type="file" id="videoFileInput">
+    <p>&nbsp;</p>
+    <canvas id="videoCanvas"></canvas>
+    <p>&nbsp;</p>
+    <button id="selectROIButton">Select ROI</button>
+    <button id="confirmROIButton" disabled>Process</button>
+
+    <script>
+        let path_video;
+        let videoElement, videoCanvas, videoCtx;
+        let videoFileInput, selectROIButton, confirmROIButton;
+        let video, videoWidth, videoHeight;
+
+        function onOpenCvReady() {
+            videoFileInput = document.getElementById('videoFileInput');
+            selectROIButton = document.getElementById('selectROIButton');
+            confirmROIButton = document.getElementById('confirmROIButton');
+
+            videoElement = document.createElement('video');
+            videoCanvas = document.getElementById('videoCanvas');
+            videoCtx = videoCanvas.getContext('2d');
+
+            videoFileInput.addEventListener('change', loadVideo);
+            selectROIButton.addEventListener('click', selectROI);
+            confirmROIButton.addEventListener('click', startProcess);
+        }
+
+        function loadVideo(event) {
+            const file = event.target.files[0];
+            video = document.createElement('video');
+            video.src = URL.createObjectURL(file);
+            video.load();
+            video.addEventListener('loadedmetadata', videoLoaded);
+        }
+
+        function videoLoaded() {
+
+            videoWidth = video.videoWidth;
+            videoHeight = video.videoHeight;
+
+            videoCanvas.width = videoWidth;
+            videoCanvas.height = videoHeight;
+            video.currentTime = 1;
+
+            videoCtx.drawImage(video, 0, 0, videoWidth, videoHeight);
+            const imageData = videoCtx.getImageData(0, 0, videoWidth, videoHeight);
+            const srcMat = cv.matFromImageData(imageData);
+            cv.imshow(videoCanvas, srcMat);
+        }
+
+        function selectROI() {
+            selectROIButton.disabled = true;
+            confirmROIButton.disabled = false;
+            videoCanvas.addEventListener('mousedown', handleMouseDown);
+            videoCanvas.addEventListener('mouseup', handleMouseUp);
+            videoCanvas.addEventListener('mouseout', handleMouseUp);
+        }
+
+        function handleMouseDown(event) {
+            const rect = videoCanvas.getBoundingClientRect();
+            const x = Math.floor(event.clientX - rect.left);
+            const y = Math.floor(event.clientY - rect.top);
+            roiRect = { x, y, width: 0, height: 0 };
+            
+            videoCtx.strokeStyle = 'green';
+            videoCtx.lineWidth = 2;
+            videoCtx.beginPath();
+            videoCtx.moveTo(x, y);
+            videoCanvas.addEventListener('mousemove', handleMouseMove);
+        }
+
+        function handleMouseMove(event) {
+            const rect = videoCanvas.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+            roiRect.width = Math.floor(x - roiRect.x);
+            roiRect.height = Math.floor(y - roiRect.y);
+            videoCtx.clearRect(0, 0, videoWidth, videoHeight);
+            videoCtx.drawImage(video, 0, 0, videoWidth, videoHeight);
+            videoCtx.strokeRect(roiRect.x, roiRect.y, roiRect.width, roiRect.height);
+        }
+
+        function handleMouseUp(event) {
+            videoCanvas.removeEventListener('mousemove', handleMouseMove);
+        }
+
+        function startProcess() {
+            console.log(path_video)
+            var data = {
+              path_video: './static/uploads/video.mp4',
+              path_result: './',
+              rois: roiRect,
+            };
+
+            $.ajax({
+              url: '/process',
+              type: 'POST',
+              contentType: 'application/json',
+              data: JSON.stringify(data),
+              success: function(response) {
+                // Handle the response from the Flask route
+                console.log(response);
+              },
+              error: function(error) {
+                console.log('Error:', error);
+              }
+            });
+        }
+    </script>
+</body>
+</html>
