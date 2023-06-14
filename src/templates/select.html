@@ -64,6 +64,7 @@
             videoCanvas.addEventListener('mousedown', handleMouseDown);
             videoCanvas.addEventListener('mouseup', handleMouseUp);
             videoCanvas.addEventListener('mouseout', handleMouseUp);
+            videoCtx.drawImage(video, 0, 0, videoWidth, videoHeight);
         }
 
         function handleMouseDown(event) {
@@ -98,7 +99,6 @@
             console.log(path_video)
             var data = {
               path_video: './static/uploads/video.mp4',
-              path_result: './',
               rois: roiRect,
             };
 
@@ -107,9 +107,22 @@
               type: 'POST',
               contentType: 'application/json',
               data: JSON.stringify(data),
+              responseType: 'blob',
               success: function(response) {
-                // Handle the response from the Flask route
-                console.log(response);
+                console.log(response)
+                      var blob = new Blob([response]);
+                      // Create a temporary anchor element to facilitate the download
+                      var a = document.createElement('a');
+                      a.href = window.URL.createObjectURL(blob);
+                      a.download = 'result.csv';
+                      a.style.display = 'none';
+
+                      // Append the anchor element to the document body and trigger the download
+                      document.body.appendChild(a);
+                      a.click();
+
+                      // Clean up by removing the temporary anchor element
+                      document.body.removeChild(a);
               },
               error: function(error) {
                 console.log('Error:', error);

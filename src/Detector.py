@@ -7,14 +7,13 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
 
 class Detector:
-    def __init__(self, path, destination, rois=None):
+    def __init__(self, path, rois=None):
         if rois is None:
             rois = [{'x': 100, 'y': 100, 'w': 100, 'h': 100}, {'x': 200, 'y': 200, 'w': 100, 'h': 100}]
         self.rois = rois
         self.cap = cv2.VideoCapture(path)
         self.num_bb = 1
         self.timeseries = [[] for _ in range(self.num_bb)]
-        self.destination = destination
 
     def calculate_signal_change(self, roi):
         gray_roi = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
@@ -52,12 +51,6 @@ class Detector:
         axis.plot(xs, ys)
         return fig
 
-    def save_plots(self):
-        for i, k in enumerate(self.timeseries):
-            plt.plot(k)
-            plt.xlabel('Frame')
-            plt.xlabel('Intensity of Change')
-            plt.savefig(self.destination + str(i) + '.png')
 
     def get_results(self):
         df = pd.DataFrame(self.timeseries).T

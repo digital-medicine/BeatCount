@@ -1,5 +1,6 @@
-from flask import Flask, Response, render_template, request, redirect, url_for
+from flask import Flask, Response, render_template, request, redirect, url_for, send_file
 from Detector import Detector
+import io
 
 app = Flask(__name__)
 
@@ -16,18 +17,21 @@ def upload():
 @app.route('/process', methods=['POST'])
 def process():
     path_video = request.json.get('path_video')
-    path_result = request.json.get('path_result')
     rois = request.json.get('rois')
 
-    detector = Detector(path=path_video, destination=path_result, rois=rois)
+    detector = Detector(path=path_video, rois=rois)
     detector.process()
 
     #detector.detect_peaks()
-    #detector.save_plots()
-    df = detector.get_results()
-    print(df)
+
+    df = detector.get_results().to_csv(index=False)
+    headers = {
+        'Content-Disposition': 'attachment; filename=mydata.csv',
+        'Content-Type': 'text/csv',
+    }
+
     return Response(
-        df.to_string(),
+        df.encode('utf-8'),
         mimetype="text/csv",
         headers={"Content-disposition":
                  "attachment; filename=timeseries.csv"})
