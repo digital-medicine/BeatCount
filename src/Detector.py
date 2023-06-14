@@ -3,7 +3,8 @@ import numpy as np
 import pandas as pd
 from scipy.signal import find_peaks
 from matplotlib import pyplot as plt
-
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+from matplotlib.figure import Figure
 
 class Detector:
     def __init__(self, path, destination, rois=None):
@@ -42,6 +43,15 @@ class Detector:
         peaks, _ = find_peaks(self.timeseries, distance=150)
         return peaks
 
+
+    def create_figure(self, timeseries):
+        fig = Figure()
+        axis = fig.add_subplot(1, 1, 1)
+        xs = range(len(timeseries))
+        ys = timeseries
+        axis.plot(xs, ys)
+        return fig
+
     def save_plots(self):
         for i, k in enumerate(self.timeseries):
             plt.plot(k)
@@ -49,6 +59,6 @@ class Detector:
             plt.xlabel('Intensity of Change')
             plt.savefig(self.destination + str(i) + '.png')
 
-    def save_results(self):
-        df = pd.DataFrame(self.timeseries)
-        df.to_csv(self.destination + 'result.csv')
+    def get_results(self):
+        df = pd.DataFrame(self.timeseries).T
+        return df

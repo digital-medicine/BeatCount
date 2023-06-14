@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, Response, render_template, request, redirect, url_for
 from Detector import Detector
 
 app = Flask(__name__)
@@ -21,9 +21,16 @@ def process():
 
     detector = Detector(path=path_video, destination=path_result, rois=rois)
     detector.process()
+
     #detector.detect_peaks()
     #detector.save_plots()
-    detector.save_results()
+    df = detector.get_results()
+    print(df)
+    return Response(
+        df.to_string(),
+        mimetype="text/csv",
+        headers={"Content-disposition":
+                 "attachment; filename=timeseries.csv"})
 
 if __name__ == '__main__':
     app.run(debug=True)
