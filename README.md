@@ -18,7 +18,7 @@ pip install -r requirements.txt
 Run the application and specify the corresponding video link as argument
 
 ```
-python ./src/main.py --video_path ../data/test.mp4
+python ./src/main.py --path_video ./data/test.mp4
 ```
 
 To select the ROIs, simply drag rectangular squares into the displayed image (usually the first frame of the video) and confirm your selection by right-clicking (on the touchpad of an Apple device, this is usually done by a two-finger click).

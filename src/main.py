@@ -46,8 +46,8 @@ def calculate_signal_change(roi):
     return mean_pixel_value
 
 
-def track_roi_in_video(video_path, peak_threshold, roi_coords):
-    cap = cv2.VideoCapture(video_path)
+def track_roi_in_video(path_video, path_result, peak_threshold, roi_coords):
+    cap = cv2.VideoCapture(path_video)
     ret, frame = cap.read()
     if not ret:
         print("Error reading video")
@@ -113,8 +113,7 @@ def track_roi_in_video(video_path, peak_threshold, roi_coords):
     plt.tight_layout()
     plt.show()
 
-    file_path = "signal_changes.txt"
-    with open(file_path, "w") as file:
+    with open(path_result, "w") as file:
         file.write(f"Overall Frequency: {overall_frequency} Hz\n\n")
         for i in range(len(rois)):
             file.write(f"ROI {i+1}:\n")
@@ -122,15 +121,16 @@ def track_roi_in_video(video_path, peak_threshold, roi_coords):
             for j, signal_change in enumerate(signal_changes[i]):
                 file.write(f"Frame {j+1}: {signal_change}\n")
 
-    print(f"Signal changes saved to {file_path}")
+    print(f"Signal changes saved to {path_result}")
     cap.release()
 
 def main(args):
-    track_roi_in_video(args.video_path, args.peak_threshold, roi_coordinates)
+    track_roi_in_video(args.path_video, args.path_result, args.peak_threshold, roi_coordinates)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(prog='BeatCount', description='Quantify the signal change in regions of interest in video sequences')
-    parser.add_argument('--video_path', type=str, help='location to load the video from')
+    parser.add_argument('--path_video', type=str, help='location to load the video from')
+    parser.add_argument('--path_result', type=str, default='./results.txt', help='location to save the results (default: ./results.txt)')
     parser.add_argument('--peak_threshold', type=int, default=0.8, help='which values to consider for peak detection in the range [0,1] (default: 0.8)')
 
     args = parser.parse_args()
