@@ -41,8 +41,7 @@ def finish_selection(event, x, y):
 
 def calculate_signal_change(roi):
     gray_roi = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
-    blurred_roi = cv2.GaussianBlur(gray_roi, (5, 5), 0)
-    mean_pixel_value = np.mean(blurred_roi)
+    mean_pixel_value = np.mean(gray_roi)
     return mean_pixel_value
 
 
