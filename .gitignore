@@ -6,3 +6,7 @@ test.py
 src/static/uploads/
 *.pyc
 test.html
+src/results.txt
+*.txt
+*.avi
+*.mp4
