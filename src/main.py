@@ -3,6 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.signal import find_peaks
 import argparse
+from datetime import datetime
+from scipy.signal import savgol_filter
 
 roi_coordinates = []
 current_roi = None
@@ -98,8 +100,9 @@ def track_roi_in_video(path_video, path_result, peak_threshold, roi_coords):
     overall_frequency = 1 / (len(signal_changes[0]) / cap.get(cv2.CAP_PROP_FPS))
 
     for i in range(len(rois)):
+        signal_changes[i] = savgol_filter(signal_changes[i], 51, 4)
         signal_changes[i] = (signal_changes[i] - np.min(signal_changes[i])) / (np.max(signal_changes[i]) - np.min(signal_changes[i]))
-        peaks, _ = find_peaks(signal_changes[i] > peak_threshold)
+        peaks, _ = find_peaks(signal_changes[i], prominence=0.3)
 
         plt.subplot(len(rois), 1, i+1)
         plt.plot(signal_changes[i], label=f"ROI {i+1}")
@@ -112,16 +115,20 @@ def track_roi_in_video(path_video, path_result, peak_threshold, roi_coords):
     plt.tight_layout()
     plt.show()
 
-    with open(path_result, "w") as file:
-        file.write("ROI,Frame,SignalChange,Peak\n")
+    now = datetime.now()
+    date_time = now.strftime("%Y_%m_%d_%H_%M_%S")
+
+    path_result_file = path_result + 'result_' + date_time + '.csv'
+    with open(path_result_file, "w") as file:
+        file.write("File,ROI,Frame,SignalChange,Peak\n")
         for i in range(len(rois)):
             for j, signal_change in enumerate(signal_changes[i]):
                 if j in peaks:
-                    file.write(f"{i+1},{j+1},{signal_change},{True}\n")
+                    file.write(f"{path_video},{i+1},{j+1},{signal_change},{True}\n")
                 else:
-                    file.write(f"{i + 1},{j + 1},{signal_change},{False}\n")
+                    file.write(f"{path_video},{i + 1},{j + 1},{signal_change},{False}\n")
 
-    print(f"Signal changes saved to {path_result}")
+    print(f"Signal changes saved to {path_result_file}")
     cap.release()
 
 def main(args):
@@ -130,7 +137,7 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(prog='BeatCount', description='Quantify the signal change in regions of interest in video sequences')
     parser.add_argument('-v', '--path_video', type=str, help='location to load the video from')
-    parser.add_argument('-r', '--path_result', type=str, default='./results.txt', help='location to save the results (default: ./results.txt)')
+    parser.add_argument('-r', '--path_result', type=str, default='./', help='location to save the results (default: ./results.txt)')
     parser.add_argument('-t', '--peak_threshold', type=float, default=0.8, help='which values to consider for peak detection in the range [0,1] (default: 0.8)')
 
     args = parser.parse_args()
