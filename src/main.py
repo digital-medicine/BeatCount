@@ -129,9 +129,9 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(prog='BeatCount', description='Quantify the signal change in regions of interest in video sequences')
-    parser.add_argument('--path_video', type=str, help='location to load the video from')
-    parser.add_argument('--path_result', type=str, default='./results.txt', help='location to save the results (default: ./results.txt)')
-    parser.add_argument('--peak_threshold', type=float, default=0.8, help='which values to consider for peak detection in the range [0,1] (default: 0.8)')
+    parser.add_argument('-v', '--path_video', type=str, help='location to load the video from')
+    parser.add_argument('-r', '--path_result', type=str, default='./results.txt', help='location to save the results (default: ./results.txt)')
+    parser.add_argument('-t', '--peak_threshold', type=float, default=0.8, help='which values to consider for peak detection in the range [0,1] (default: 0.8)')
 
     args = parser.parse_args()
     main(args)
